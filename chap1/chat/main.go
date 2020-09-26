@@ -24,15 +24,16 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-
 	r := newRoom()
-	http.Handle("/", &templateHandler{filename: "chats.html"})
-	http.Handle("/room", r)
 
+	http.Handle("/", &templateHandler{filename: "chats.html"})
+	http.Handle("/room", r) // /room/ ref: https://github.com/matryer/goblueprints/issues/72
+
+	// get the room going
 	go r.run()
 
-	// Webサーバーを起動する
+	// start the web server
 	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal("ListenAndServe:", nil)
+		log.Fatal("ListenAndServe:", err)
 	}
 }
