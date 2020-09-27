@@ -1,6 +1,7 @@
 package main
 
 import (
+	"golang-webapp/chap1/trace"
 	"log"
 	"net/http"
 
@@ -15,6 +16,7 @@ type room struct {
 	join    chan *client     // チャットに参加しようとしているclientのためのチャネル
 	leave   chan *client     // チャットから退出しようとしているclientのためのチャネル
 	clients map[*client]bool // 在籍しているclientを保持
+	tracer  trace.Tracer
 }
 
 func newRoom() *room {
@@ -32,11 +34,14 @@ func (r *room) run() {
 		// 参加
 		case client := <-r.join:
 			r.clients[client] = true
+			r.tracer.Trace("私いクライアントが参加しました。")
 		// 退出
 		case client := <-r.leave:
 			delete(r.clients, client)
+			r.tracer.Trace("クライアントが退出しました。")
 		// メッセージを送信
 		case msg := <-r.forward:
+			r.tracer.Trace("メッセージが送信されました。", string(msg))
 			for client := range r.clients {
 				client.send <- msg
 			}
