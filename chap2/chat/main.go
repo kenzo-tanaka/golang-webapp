@@ -33,7 +33,7 @@ func main() {
 	r := newRoom()
 	r.tracer = trace.New(os.Stdout)
 
-	http.Handle("/", &templateHandler{filename: "chats.html"})
+	http.Handle("/chat", MustAuth(&templateHandler{filename: "chats.html"}))
 	http.Handle("/room", r) // /room/ ref: https://github.com/matryer/goblueprints/issues/72
 
 	// get the room going
