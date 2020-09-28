@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"sync"
 	"text/template"
+
+	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/gomniauth/providers/google"
 )
 
 // templ は1つのtemplateを表す
@@ -27,6 +30,13 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	// TODO: 本家リポジトリにはベタ書きされていたが、環境変数で管理すべきでは
+	gomniauth.SetSecurityKey("...")
+	gomniauth.WithProviders(
+		google.New("clientId", "key", "http://localhost:8080/auth/callback/google"),
+	)
+
 	var addr = flag.String("addr", ":8080", "アプリケーションのアドレス")
 	flag.Parse()
 
