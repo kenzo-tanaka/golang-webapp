@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/objx"
 )
 
 type authHandler struct {
@@ -47,6 +48,39 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Location", loginURL)
+		w.WriteHeader(http.StatusTemporaryRedirect)
+
+	case "callback":
+		provider, err := gomniauth.Provider(provider)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error when trying to get provider %s: %s", provider, err), http.StatusBadRequest)
+			return
+		}
+
+		// get the credentials
+		creds, err := provider.CompleteAuth(objx.MustFromURLQuery(r.URL.RawQuery))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error when trying to complet auth for %s: %s", provider, err), http.StatusInternalServerError)
+			return
+		}
+
+		// get the user
+		user, err := provider.GetUser(creds)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error when trying to get user from for %s: %s", provider, err), http.StatusInternalServerError)
+			return
+		}
+
+		// save some data
+		authCookieValue := objx.New(map[string]interface{}{
+			"name": user.Name(),
+		}).MustBase64()
+		http.SetCookie(w, &http.Cookie{
+			Name:  "auth",
+			Value: authCookieValue,
+			Path:  "/"})
+
+		w.Header().Set("Location", "/chat")
 		w.WriteHeader(http.StatusTemporaryRedirect)
 
 	default:
