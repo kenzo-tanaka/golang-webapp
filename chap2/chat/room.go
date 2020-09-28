@@ -6,12 +6,13 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/objx"
 )
 
 type room struct {
 
 	// forwardは他のclientに送信するメッセージを保持するためのチャネル
-	forward chan []byte
+	forward chan *message
 
 	join    chan *client     // チャットに参加しようとしているclientのためのチャネル
 	leave   chan *client     // チャットから退出しようとしているclientのためのチャネル
@@ -62,10 +63,16 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Fatal("ServeHTTP", err)
 		return
 	}
+	authCookie, err := req.Cooki("auth")
+	if err != nil {
+		log.Fatal("Failed to get auth cookie:", err)
+		return
+	}
 	client := &client{
-		socket: socket,
-		send:   make(chan []byte, messageBufferSize),
-		room:   r,
+		socket:   socket,
+		send:     make(chan *message, messageBufferSize),
+		room:     r,
+		userData: objx.MustFromBase64(authCookie.Value),
 	}
 
 	r.join <- client
