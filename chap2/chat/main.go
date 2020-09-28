@@ -10,9 +10,11 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/joho/godotenv"
 	"github.com/stretchr/gomniauth"
 	"github.com/stretchr/gomniauth/providers/google"
 	"github.com/stretchr/objx"
+	"github.com/stretchr/signature"
 )
 
 // templ は1つのtemplateを表す
@@ -40,10 +42,14 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	// TODO: 本家リポジトリにはベタ書きされていたが、環境変数で管理すべきでは
-	gomniauth.SetSecurityKey("...")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	gomniauth.SetSecurityKey(signature.RandomKey(64))
 	gomniauth.WithProviders(
-		google.New("clientId", "key", "http://localhost:8080/auth/callback/google"),
+		google.New(os.Getenv("GOOGLE_CLIENT_ID"), os.Getenv("GOOGLE_SECRET"), "http://localhost:8080/auth/callback/google"),
 	)
 
 	var addr = flag.String("addr", ":8080", "アプリケーションのアドレス")
