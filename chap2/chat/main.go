@@ -35,6 +35,7 @@ func main() {
 
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chats.html"}))
 	http.Handle("/login", &templateHandler{filename: "login.html"})
+	http.HandleFunc("/auth/", loginHandler)
 	http.Handle("/room", r) // /room/ ref: https://github.com/matryer/goblueprints/issues/72
 
 	// get the room going
