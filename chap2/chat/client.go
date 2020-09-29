@@ -18,7 +18,7 @@ func (c *client) read() {
 	defer c.socket.Close()
 	for {
 		var msg *message
-		err := c.socket.ReadJSON(*msg)
+		err := c.socket.ReadJSON(&msg)
 		if err != nil {
 			return
 		}
